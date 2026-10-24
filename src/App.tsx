@@ -737,8 +737,9 @@ export default function App() {
         if (!RITES.has(cast.ability)) continue
         flashTimers.set(`${cast.player}:${cast.ability}`, now + 450)
         flashChanged = true
-        // Held back while the first-run controls card is up; it'll show on the next cast.
-        if (!seenRitesRef.current.has(cast.ability) && !controlsCardRef.current) {
+        // Held back while the first-run controls card or the tutorial is up; it'll show on
+        // the next cast.
+        if (!seenRitesRef.current.has(cast.ability) && !controlsCardRef.current && !tutorialRef.current) {
           seenRitesRef.current.add(cast.ability)
           writeStorage('abc-seen-rites', JSON.stringify([...seenRitesRef.current]))
           setRiteTip(cast.ability)
@@ -1037,8 +1038,10 @@ export default function App() {
 
         {playing && <SermonBanner wave={hud.wave} waveState={hud.waveState} curses={curses} mode={hud.mode} />}
 
-        {playing && lesson !== null && (
-          <div className="panel controls-card tutorial" key={lesson} aria-live="polite">
+        {/* Hidden while a sermon's banner is up, so the two never sit on each other; the lesson
+            keeps counting underneath. */}
+        {playing && lesson !== null && hud.waveState === 'fight' && (
+          <div className="panel controls-card tutorial" key={`lesson-${lesson}`} aria-live="polite">
             <span className="label accent">{lesson < LESSONS.length ? `First sermon · ${lesson + 1} of ${LESSONS.length}` : 'Ready'}</span>
             <p>{lesson < LESSONS.length ? LESSONS[lesson].text[device] : 'You are ready. Refuse the Logos.'}</p>
           </div>
@@ -1053,7 +1056,7 @@ export default function App() {
         {playing && riteTip && <RiteTip rite={riteTip} />}
 
         {/* After the controls card, so CSS can move the line clear of it. */}
-        {(playing || phase === 'paused') && line && <SpokenLine key={line.id} line={line} paused={!playing} />}
+        {(playing || phase === 'paused') && line && <SpokenLine key={`line-${line.id}`} line={line} paused={!playing} />}
 
         {touch && playing && (
           <div className="touch-controls">
@@ -1104,7 +1107,7 @@ export default function App() {
         )}
         {phase === 'title' && ledgerOpen && <LedgerScreen ledger={ledger} index={page} onSelect={turnTo} onBack={closeLedger} />}
 
-        {curtain > 0 && <div className="curtain" key={curtain} aria-hidden="true" />}
+        {curtain > 0 && <div className="curtain" key={`curtain-${curtain}`} aria-hidden="true" />}
 
         {(phase === 'paused' || (phase === 'title' && optionsOpen)) && (
           <div className="overlay">
