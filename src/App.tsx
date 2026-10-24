@@ -283,8 +283,9 @@ export default function App() {
   const tutorialRef = useRef<Tutorial | null>(null)
   const [lesson, setLesson] = useState<number | null>(null)
   // What the player last touched, so hints and key labels can name the right buttons.
-  const [device, setDevice] = useState<Device>('keys')
-  const deviceRef = useRef<Device>('keys')
+  // Phones and tablets start on touch, until a key or pad says otherwise.
+  const [device, setDevice] = useState<Device>(() => (window.matchMedia('(pointer: coarse)').matches ? 'touch' : 'keys'))
+  const deviceRef = useRef<Device>(device)
   // Menus show their keyboard cursor (the gold outline) only while keys or a pad are in
   // use; moving the mouse hides it, since hovering already highlights.
   const [usingMouse, setUsingMouse] = useState(true)

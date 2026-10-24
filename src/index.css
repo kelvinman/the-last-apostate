@@ -2021,3 +2021,63 @@
     left: calc(max(14px, env(safe-area-inset-left)) + 306px);
   }
 }
+
+/* Phones: the tutorial is a slim, unframed hint in the space the controls leave, rather
+   than a card over the arena. */
+@media (pointer: coarse) {
+  .game .controls-card.tutorial {
+    --outline:
+      2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink),
+      2px 2px 0 var(--ink), -2px 2px 0 var(--ink), 2px -2px 0 var(--ink), -2px -2px 0 var(--ink);
+    gap: 0;
+    padding: 0;
+    border: 0;
+    border-image: none;
+    background: none;
+    text-shadow: var(--outline);
+    animation: none;
+  }
+
+  .game .controls-card.tutorial .label {
+    font-size: 10px;
+  }
+
+  .game .controls-card.tutorial p {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.05;
+    text-wrap: balance;
+  }
+}
+
+/* Upright: in the gap between the arena's floor and the stick. */
+@media (pointer: coarse) and (orientation: portrait) {
+  .game .controls-card.tutorial {
+    top: auto;
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + min(150px, 38vw) + 6px);
+    width: calc(100% - 24px);
+  }
+
+  /* The hint is down by the controls, so spoken lines keep their place up top. */
+  .game .controls-card ~ .spoken {
+    top: calc(max(14px, env(safe-area-inset-top)) + 100px);
+  }
+}
+
+/* Phones held sideways: along the bottom, between the stick and Jump and Dash. */
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) {
+  .game .controls-card.tutorial {
+    top: auto;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: calc(100% - 2 * max(16px, env(safe-area-inset-left)) - 2 * 150px);
+  }
+
+  /* One line only, so it stays low over the floor. */
+  .game .controls-card.tutorial .label {
+    display: none;
+  }
+
+  .game .controls-card ~ .spoken {
+    top: max(8px, env(safe-area-inset-top));
+  }
+}
