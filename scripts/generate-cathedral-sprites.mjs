@@ -1,6 +1,8 @@
 // Generates src/assets/cathedral-sprites.png, the crypt, vault and tomb sheets, and src/assets/ui/*.png (extra scenery and UI
 // pieces in the style of src/assets/gothic-sprites.png: Endesga 32 palette, 1px ink outlines,
-// light from the top-left), plus public/favicon.png and the public/og-image.png share card.
+// light from the top-left), plus public/favicon.png and the home-screen icons
+// (public/icon-192.png, icon-512.png, apple-touch-icon.png). The share card,
+// public/og-image.png, is drawn by og.html with the game's renderer instead.
 // Every pixel is placed explicitly from the palette, so there is no anti-aliasing.
 //
 //   node scripts/generate-cathedral-sprites.mjs
@@ -998,11 +1000,13 @@ const banner = new Sprite(20, 64)
 }
 
 // The Eye of the Logos in gold (96×96): a sunburst around an almond eye with a red iris.
-const goldEye = new Sprite(96, 96)
-{
-  const c = 47.5
-  for (let y = 0; y < 96; y += 1) {
-    for (let x = 0; x < 96; x += 1) {
+// Drawn from proportions, so the app icon can redraw it smaller without losing the pupil.
+function eyeSeal(size) {
+  const k = size / 96
+  const sprite = new Sprite(size, size)
+  const c = size / 2 - 0.5
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
       const dx = x - c
       const dy = y - c
       const r = Math.hypot(dx, dy)
@@ -1010,18 +1014,20 @@ const goldEye = new Sprite(96, 96)
       let color = null
       // Sixteen thin rays, widest near the ring.
       const ray = Math.sin(angle * 8)
-      if (r > 30 && r < 47 && Math.abs(ray) > 0.9 - (47 - r) * 0.004) color = r < 38 ? C.gold1 : C.gold0
-      if (r <= 30) color = r > 28.6 ? C.ink : r > 26.5 ? C.gold0 : C.wood0
-      const lidH = 12 * Math.cos(Math.min(Math.PI / 2, (Math.abs(dx) / 24) * (Math.PI / 2)))
-      if (r < 26 && Math.abs(dy) < lidH) color = C.cream
-      if (r < 26 && Math.abs(dx) < 24 && Math.abs(Math.abs(dy) - lidH) < 1) color = C.ink
-      if (r < 9 && Math.abs(dy) < lidH) color = r > 7.8 ? C.ink : r > 3.4 ? C.blood3 : C.ink
-      if (Math.hypot(dx + 2.5, dy + 2.5) < 1.5) color = C.white
-      if (color) goldEye.set(x, y, color)
+      if (r > 30 * k && r < 47 * k && Math.abs(ray) > 0.9 - ((47 * k - r) / k) * 0.004) color = r < 38 * k ? C.gold1 : C.gold0
+      if (r <= 30 * k) color = r > 28.6 * k ? C.ink : r > 26.5 * k ? C.gold0 : C.wood0
+      const lidH = 12 * k * Math.cos(Math.min(Math.PI / 2, (Math.abs(dx) / (24 * k)) * (Math.PI / 2)))
+      if (r < 26 * k && Math.abs(dy) < lidH) color = C.cream
+      if (r < 26 * k && Math.abs(dx) < 24 * k && Math.abs(Math.abs(dy) - lidH) < 1) color = C.ink
+      if (r < 9 * k && Math.abs(dy) < lidH) color = r > 7.8 * k ? C.ink : r > 3.4 * k ? C.blood3 : C.ink
+      if (Math.hypot(dx + 2.5 * k, dy + 2.5 * k) < 1.5 * Math.max(1, k)) color = C.white
+      if (color) sprite.set(x, y, color)
     }
   }
-  goldEye.outline()
+  sprite.outline()
+  return sprite
 }
+const goldEye = eyeSeal(96)
 
 // The first version of the Logos (64×150): a tall dead terminal with a cracked screen,
 // a gold capstone, and lines of its last output carved underneath.
@@ -1350,30 +1356,7 @@ const favicon = new Sprite(32, 32)
 for (let y = 0; y < 32; y += 1) for (let x = 0; x < 32; x += 1) favicon.set(x, y, rose.get(x * 3 + 1, y * 3 + 1))
 writeSheet('public/favicon.png', { piece: [favicon, 0, 0] }, 32, 32)
 
-// ---------- Share card (1200×630), drawn at 1/4 size and scaled up ----------
-const FONT = {
-  A: ['.###.', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
-  B: ['####.', '#...#', '#...#', '####.', '#...#', '#...#', '####.'],
-  C: ['.####', '#....', '#....', '#....', '#....', '#....', '.####'],
-  D: ['####.', '#...#', '#...#', '#...#', '#...#', '#...#', '####.'],
-  E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
-  H: ['#...#', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
-  I: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '#####'],
-  L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
-  M: ['#...#', '##.##', '#.#.#', '#.#.#', '#...#', '#...#', '#...#'],
-  N: ['#...#', '##..#', '#.#.#', '#..##', '#...#', '#...#', '#...#'],
-  O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
-  P: ['####.', '#...#', '#...#', '####.', '#....', '#....', '#....'],
-  R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
-  S: ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'],
-  T: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '..#..'],
-  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
-  W: ['#...#', '#...#', '#...#', '#.#.#', '#.#.#', '##.##', '#...#'],
-  Y: ['#...#', '#...#', '.#.#.', '..#..', '..#..', '..#..', '..#..'],
-}
-const CARD_W = 300
-const CARD_H = 158
-const card = new Sprite(CARD_W, CARD_H)
+// ---------- Shared helpers for the icon ----------
 const DIM = { [C.stone0]: C.ink, [C.stone1]: C.stone0, [C.stone2]: C.stone1, [C.moss0]: C.ink, [C.moss1]: C.stone0, [C.moss2]: C.stone0 }
 function blit(dst, src, ox, oy, map = {}) {
   for (let y = 0; y < src.h; y += 1) {
@@ -1383,48 +1366,31 @@ function blit(dst, src, ox, oy, map = {}) {
     }
   }
 }
-function text(dst, string, ox, oy, scale, color, shadow) {
-  let cursor = ox
-  for (const char of string) {
-    const glyph = FONT[char]
-    if (glyph) {
-      glyph.forEach((row, y) =>
-        [...row].forEach((bit, x) => {
-          if (bit !== '#') return
-          for (let sy = 0; sy < scale; sy += 1) {
-            for (let sx = 0; sx < scale; sx += 1) {
-              dst.set(cursor + x * scale + sx + 1, oy + y * scale + sy + 1, shadow)
-              dst.set(cursor + x * scale + sx, oy + y * scale + sy, color)
-            }
-          }
-        }),
-      )
-    }
-    cursor += 6 * scale
+// ---------- App icon (home screens): the Logos's Eye, as in the Tomb and the share card ----------
+// Drawn on a 64×64 grid with nothing important near the edges, so it survives rounded
+// corners and Android's circular masks. Written at 192 and 512 for the web manifest, and
+// the centre 60×60 at 180 for iOS.
+const ICON = 64
+const icon = new Sprite(ICON, ICON)
+// The Tomb's wall, dimmed, lit warm from behind the Eye.
+const UNLIT = { [C.wood1]: C.wood0, [C.wood0]: C.ink, [C.gold0]: C.wood0, [C.gold1]: C.wood0 }
+for (let y = 0; y < ICON; y += 16) for (let x = -8; x < ICON; x += 32) blit(icon, (y / 16) % 2 ? tombWallB : tombWallA, x, y, UNLIT)
+for (let y = 0; y < ICON; y += 1) {
+  for (let x = 0; x < ICON; x += 1) {
+    const d = Math.hypot(x - 31.5, y - 31.5)
+    if (d < 24) icon.set(x, y, C.wood0)
+    else if (d < 29 && (x + y) % 2 === 0) icon.set(x, y, C.wood0)
+    else if (d < 32 && (x + y) % 4 === 0) icon.set(x, y, C.wood1)
   }
 }
-const textWidth = (string, scale) => string.length * 6 * scale - scale
-// Dim wall, pillars, the rose window, a ledge for a floor, and a pair of portals.
-for (let y = 0; y < CARD_H; y += 16) for (let x = 0; x < CARD_W; x += 32) blit(card, [wallA, wallB, wallC][(x / 32 + y / 16) % 3 === 0 ? 1 : 0], x, y, DIM)
-for (const px of [18, CARD_W - 38]) for (let y = 0; y < CARD_H; y += 16) blit(card, shaft, px, y)
-blit(card, rose, (CARD_W - 96) / 2, 4)
-for (let x = 0; x < CARD_W; x += 16) blit(card, cornice, x, CARD_H - 8)
-blit(card, portalFrames.portalRed0[0], 66, 32)
-blit(card, portalFrames.portalBlue0[0], CARD_W - 90, 32)
-// Title on a dark band so it reads at thumbnail size.
-for (let y = 100; y < 136; y += 1) for (let x = 0; x < CARD_W; x += 1) card.set(x, y, C.ink)
-for (let x = 0; x < CARD_W; x += 1) {
-  card.set(x, 99, C.gold0)
-  card.set(x, 136, C.gold0)
+blit(icon, eyeSeal(56), 4, 4)
+function scaled(src, scale, crop = 0) {
+  const size = (src.w - crop * 2) * scale
+  const out = new Sprite(size, size)
+  for (let y = 0; y < size; y += 1) for (let x = 0; x < size; x += 1) out.set(x, y, src.get(crop + Math.floor(x / scale), crop + Math.floor(y / scale)))
+  return out
 }
-const top = 'THE LAST'
-const bottom = 'APOSTATE'
-const titleWidth = textWidth(`${top} ${bottom}`, 2)
-text(card, top, (CARD_W - titleWidth) / 2, 104, 2, C.cream, C.blood0)
-text(card, bottom, (CARD_W - titleWidth) / 2 + textWidth(`${top} `, 2) + 2, 104, 2, C.blood3, C.blood0)
-const tagline = 'OUTLAST TWENTY SERMONS'
-text(card, tagline, Math.round((CARD_W - textWidth(tagline, 1)) / 2), 124, 1, C.stone4, C.ink)
-const og = new Sprite(1200, 630)
-for (let y = 0; y < 630; y += 1) for (let x = 0; x < 1200; x += 1) og.set(x, y, card.get(x >> 2, y >> 2))
-writeSheet('public/og-image.png', { piece: [og, 0, 0] }, 1200, 630)
-console.log('Favicon and share card written to public/')
+writeSheet('public/icon-192.png', { piece: [scaled(icon, 3), 0, 0] }, 192, 192)
+writeSheet('public/icon-512.png', { piece: [scaled(icon, 8), 0, 0] }, 512, 512)
+writeSheet('public/apple-touch-icon.png', { piece: [scaled(icon, 3, 2), 0, 0] }, 180, 180)
+console.log('Favicon and app icons written to public/')

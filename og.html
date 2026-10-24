@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- The share card (public/og-image.png), drawn with the game's own renderer. Dev only:
+     run `pnpm dev`, open /og.html, check it, and save it over public/og-image.png. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Share card</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Silkscreen&family=VT323&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 24px; background: #181425; color: #c0cbdc; font: 20px VT323, monospace; }
+      canvas { display: block; width: 1200px; max-width: 100%; image-rendering: pixelated; }
+      a { color: #e4a672; }
+    </style>
+  </head>
+  <body>
+    <canvas id="card" width="1200" height="630"></canvas>
+    <p><a id="save" download="og-image.png">Save as og-image.png</a></p>
+    <script type="module" src="/src/og.ts"></script>
+  </body>
+</html>

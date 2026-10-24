@@ -114,6 +114,8 @@ Every push to `main` is tested and deployed to GitHub Pages
 - `scripts/generate-cathedral-sprites.mjs` and `scripts/generate-characters.mjs`: every
   arena, prop, follower and UI frame, drawn in code in the Endesga 32 palette.
 - `src/credits.ts`: the in-game Credits page.
+- `og.html`: the link-preview image (`public/og-image.png`), drawn with the game's renderer;
+  open it under `pnpm dev` to redraw it.
 
 </details>
 

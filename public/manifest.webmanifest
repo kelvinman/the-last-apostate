@@ -1,0 +1,14 @@
+{
+  "name": "The Last Apostate",
+  "short_name": "Apostate",
+  "description": "A browser game about the comfort of certainty, and the last person who refuses it.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#050307",
+  "theme_color": "#050307",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
