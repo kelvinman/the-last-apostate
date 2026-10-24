@@ -1,6 +1,6 @@
 {
   "name": "The Last Apostate",
-  "short_name": "Apostate",
+  "short_name": "The Last Apostate",
   "description": "A browser game about the comfort of certainty, and the last person who refuses it.",
   "start_url": "./",
   "scope": "./",
