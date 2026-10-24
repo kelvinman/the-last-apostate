@@ -35,8 +35,11 @@ export function RiteIcon({ rite }: { rite: AbilityKey }) {
   return <span className={`rite-icon rite-${rite}`} aria-hidden="true" />
 }
 
+/** What sets a rite off, worded for the device: the dash is a button, the rest cast themselves. */
+const riteWhen = (key: AbilityKey, touch: boolean) => (key === 'dash' && touch ? 'Tap Dash.' : abilityMeta[key].when)
+
 /** Each rite with what it does and what sets it off: for the Controls page. */
-export function RitesList() {
+export function RitesList({ touch = false }: { touch?: boolean }) {
   return (
     <ul className="rites">
       {ABILITY_ORDER.map((key) => {
@@ -47,7 +50,7 @@ export function RitesList() {
             <div>
               <strong>{meta.label}</strong>
               <span>{meta.does}</span>
-              <small>{meta.when}</small>
+              <small>{riteWhen(key, touch)}</small>
             </div>
           </li>
         )
@@ -57,7 +60,7 @@ export function RitesList() {
 }
 
 /** Shown the first time each rite casts itself, so players learn what it was. */
-export function RiteTip({ rite }: { rite: AbilityKey }) {
+export function RiteTip({ rite, touch = false }: { rite: AbilityKey; touch?: boolean }) {
   const meta = abilityMeta[rite]
   return (
     <div className="panel rite-tip" key={rite} role="status">
@@ -65,14 +68,35 @@ export function RiteTip({ rite }: { rite: AbilityKey }) {
       <div>
         <strong>{meta.label}</strong>
         <span>{meta.does}</span>
-        <small>{meta.when}</small>
+        <small>{riteWhen(rite, touch)}</small>
       </div>
     </div>
   )
 }
 
 /** The four inputs (both players' in co-op), plus a reminder that firing and rites are automatic. */
-export function ControlsList({ players = 1, pad = false }: { players?: number; pad?: boolean }) {
+export function ControlsList({ players = 1, pad = false, touch = false }: { players?: number; pad?: boolean; touch?: boolean }) {
+  if (touch) {
+    return (
+      <>
+        <dl className="controls is-touch">
+          {[
+            ['Stick', 'Move, ▼ drop'],
+            ['Jump', 'Jump ×2'],
+            ['Dash', 'Dash'],
+          ].map(([control, does]) => (
+            <div key={does}>
+              <dt>
+                <kbd>{control}</kbd>
+              </dt>
+              <dd>{does}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="controls-note">You fire automatically. Your rites cast themselves.</p>
+      </>
+    )
+  }
   if (pad) {
     return (
       <>

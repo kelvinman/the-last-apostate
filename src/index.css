@@ -2081,3 +2081,90 @@
     top: max(8px, env(safe-area-inset-top));
   }
 }
+
+/* Small screens: the Controls page keeps each rite's name and what sets it off, and drops
+   the description (the card shown when a rite first casts has it), so it fits a phone. */
+@media (max-width: 640px), (max-height: 520px) {
+  .controls-panel {
+    gap: 8px;
+  }
+
+  .controls-panel .rites div > span {
+    display: none;
+  }
+
+  .controls-panel .rites li {
+    gap: 10px;
+    padding: 4px 8px;
+  }
+
+  .controls-panel h2 {
+    font-size: 34px;
+  }
+
+  .controls-panel .controls dd,
+  .controls-panel .controls-note {
+    line-height: 1;
+  }
+}
+
+/* Touch has three controls, so three columns wherever the list appears. */
+.controls.is-touch,
+.controls-panel .controls.is-touch {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Phones held upright: the three cards stack, so each is slimmer and the heading shorter,
+   and all three (plus your doctrines) fit without scrolling. */
+@media (max-width: 640px) and (min-height: 521px) {
+  .upgrade-panel {
+    gap: 8px;
+  }
+
+  .upgrade-panel h2 {
+    font-size: 30px;
+  }
+
+  .upgrade-panel .cards {
+    gap: 8px;
+  }
+
+  .upgrade-panel .card {
+    gap: 4px;
+    padding: 10px 14px 8px;
+  }
+
+  .upgrade-panel .card strong {
+    font-size: 21px;
+  }
+
+  .upgrade-panel .card p {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .upgrade-panel .pips {
+    padding-top: 2px;
+  }
+}
+
+/* Phones held sideways: rites in three columns, so the page is two rows of them. */
+@media (max-height: 520px) {
+  .controls-panel {
+    gap: 4px;
+  }
+
+  .controls-panel h2 {
+    font-size: 26px;
+  }
+
+  .controls-panel .rites {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .controls-panel .rites small {
+    font-size: 14px;
+    line-height: 1;
+  }
+}

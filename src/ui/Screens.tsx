@@ -319,14 +319,14 @@ export function CreditsPage({ credits, onBack }: { credits: { heading: string; l
   )
 }
 
-export function ControlsPage({ players, pad, onBack }: { players: number; pad: boolean; onBack: () => void }) {
+export function ControlsPage({ players, pad, touch, onBack }: { players: number; pad: boolean; touch: boolean; onBack: () => void }) {
   return (
     <div className="panel controls-panel">
       <span className="label accent">Paused</span>
       <h2>Controls</h2>
-      <ControlsList players={players} pad={pad} />
+      <ControlsList players={players} pad={pad} touch={touch} />
       <span className="label">Rites</span>
-      <RitesList />
+      <RitesList touch={touch} />
       <button type="button" tabIndex={-1} className="secondary is-selected" onClick={onBack}>
         Back <kbd data-pad="B">Esc</kbd>
       </button>

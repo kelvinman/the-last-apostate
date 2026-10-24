@@ -1053,7 +1053,7 @@ export default function App() {
           </div>
         )}
 
-        {playing && riteTip && <RiteTip rite={riteTip} />}
+        {playing && riteTip && <RiteTip rite={riteTip} touch={device === 'touch'} />}
 
         {/* After the controls card, so CSS can move the line clear of it. */}
         {(playing || phase === 'paused') && line && <SpokenLine key={`line-${line.id}`} line={line} paused={!playing} />}
@@ -1111,7 +1111,7 @@ export default function App() {
 
         {(phase === 'paused' || (phase === 'title' && optionsOpen)) && (
           <div className="overlay">
-            {pauseView === 'controls' && <ControlsPage players={hud.players.length} pad={device === 'pad'} onBack={menuBack} />}
+            {pauseView === 'controls' && <ControlsPage players={hud.players.length} pad={device === 'pad'} touch={device === 'touch'} onBack={menuBack} />}
             {pauseView === 'doctrines' && <DoctrinesPage levels={levels} onBack={menuBack} />}
             {pauseView === 'keys' && (
               <MenuPanel kicker="Settings" title="Keys" items={keysItems} index={pauseIndex} onSelect={selectPause} hint="choose · Enter rebind" dense />
