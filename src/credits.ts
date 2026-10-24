@@ -11,6 +11,14 @@ export const CREDITS: { heading: string; lines: string[] }[] = [
     lines: ['First prototyped in Figma Make', 'Claude (Anthropic): code, pixel art generation, writing', 'React, Vite and TypeScript'],
   },
   {
+    heading: 'Art',
+    lines: [
+      'Horror Fantasy Assets by stealthix (CC0), via OpenGameArt',
+      "The apostate's face: a Sprite-AI gallery sprite",
+      'Everything else drawn in code',
+    ],
+  },
+  {
     heading: 'Fonts',
     lines: ['Pixelify Sans by Stefie Justprince', 'Silkscreen by Jason Kottke', 'VT323 by Peter Hull', 'All under the SIL Open Font License'],
   },

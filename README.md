@@ -14,7 +14,7 @@ being right. It can only be survived by refusing to stop thinking.
 ---
 
 **The Last Apostate**, 2026
-Browser game: pixel art drawn in code, generative organ music.
+Browser game: pixel art mostly drawn in code, generative organ music.
 Concept with Jon, Danny and Vic at the Friends of Figma Los Angeles AI Impact Workshop.
 Prototyped in Figma Make; developed with Claude (Anthropic).
 
@@ -53,8 +53,9 @@ what to cut, and what wasn't good enough yet. It's a game about blind faith in A
 by directing one closely, which felt like the right way to build it.
 
 **One look, enforced.** The early build mixed art styles and blurry, too-modern pieces. I
-pulled everything back to the original sprite sheet's look: one 32-colour palette, one
-chunky pixel grid, and every arena, follower and UI frame redrawn in code to match.
+pulled everything back to the look of the free sprite sheet we'd started from (stealthix's
+horror props): one 32-colour palette, one chunky pixel grid, and every arena, follower and
+UI frame redrawn in code to match.
 
 **Fewer buttons, more movement.** Aiming, firing and casting rites by hand made the
 controls too complicated. Firing and rites became automatic, so the whole game is four
@@ -112,7 +113,7 @@ Every push to `main` is tested and deployed to GitHub Pages
 - `src/game/narrator.ts` and `src/game/lore.ts`: spoken lines and the Ledger.
 - `src/game/audio.ts`: synthesized sound effects and generative organ music.
 - `scripts/generate-cathedral-sprites.mjs` and `scripts/generate-characters.mjs`: every
-  arena, prop, follower and UI frame, drawn in code in the Endesga 32 palette.
+  arena, follower and UI frame, and most props, drawn in code in the Endesga 32 palette.
 - `src/credits.ts`: the in-game Credits page.
 - `og.html`: the link-preview image (`public/og-image.png`), drawn with the game's renderer;
   open it under `pnpm dev` to redraw it.
@@ -123,7 +124,11 @@ Every push to `main` is tested and deployed to GitHub Pages
 
 Design and development by Kelvin Man. Concept with Jon, Danny and Vic, at the Friends of
 Figma Los Angeles AI Impact Workshop; prototyped in Figma Make. Developed with Claude
-(Anthropic). Fonts: Pixelify Sans, Silkscreen and VT323 (SIL Open Font License). Palette:
-Endesga 32 by ENDESGA.
+(Anthropic). Art: the curtains, mirrors, windows, candelabras and paintings are from
+[Horror Fantasy Assets](https://opengameart.org/content/horror-fantasy-assets) by stealthix
+(CC0), and the apostate's face is from a
+[Sprite-AI gallery sprite](https://www.sprite-ai.art/gallery/male-college-student-with-blonde-hair-43e9)
+(free for non-commercial use); everything else is drawn in code. Fonts: Pixelify Sans,
+Silkscreen and VT323 (SIL Open Font License). Palette: Endesga 32 by ENDESGA.
 
-© 2026 Kelvin Man. All rights reserved.
+© 2026 Kelvin Man, except the third-party art credited above. All rights reserved.
