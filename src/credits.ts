@@ -1,11 +1,11 @@
 // Who made The Last Apostate, for the Credits page (Settings → Save and credits → Credits).
-// Fill in the names: empty sections are simply left out.
+// Empty sections are simply left out.
 
 export const CREDITS: { heading: string; lines: string[] }[] = [
   // The friends the game was first made with, and where.
   { heading: 'Original concept', lines: ['Jon, Danny and Vic', 'Made at the Friends of Figma Los Angeles AI Impact Workshop'] },
   // Everything since.
-  { heading: 'Design and development', lines: [] },
+  { heading: 'Design and development', lines: ['Kelvin Man'] },
   {
     heading: 'Built with',
     lines: ['First prototyped in Figma Make', 'Claude (Anthropic): code, pixel art generation, writing', 'React, Vite and TypeScript'],

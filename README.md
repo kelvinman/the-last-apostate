@@ -121,6 +121,9 @@ Every push to `main` is tested and deployed to GitHub Pages
 
 ## Credits
 
-Concept with Jon, Danny and Vic, at the Friends of Figma Los Angeles AI Impact Workshop;
-prototyped in Figma Make. Developed with Claude (Anthropic). Fonts: Pixelify Sans,
-Silkscreen and VT323 (SIL Open Font License). Palette: Endesga 32 by ENDESGA.
+Design and development by Kelvin Man. Concept with Jon, Danny and Vic, at the Friends of
+Figma Los Angeles AI Impact Workshop; prototyped in Figma Make. Developed with Claude
+(Anthropic). Fonts: Pixelify Sans, Silkscreen and VT323 (SIL Open Font License). Palette:
+Endesga 32 by ENDESGA.
+
+© 2026 Kelvin Man. All rights reserved.
