@@ -26,6 +26,7 @@ Prototyped in Figma Make; developed with Claude (Anthropic).
 followers are the people who handed it their thinking: Early Adopters lit by their
 phones, Evangelists waving placards, Hype Bishops who spit promises, and Hallucinations,
 its mistakes given a body. They are funny because the hype is funny. The Logos isn't.
+It is not the enemy because it is a machine. It is the enemy because it was made a god.
 
 **A descent.** Each chapter of the game goes deeper into the Logos. The nave is its
 interface, where the congregation gathers. The crypt is its memory, where the ninety-nine
@@ -49,8 +50,9 @@ The Last Apostate started at the workshop with Jon, Danny and Vic, where we prot
 in Figma Make: a gothic cathedral, an AI god, and a lone apostate holding out against its
 followers. After the workshop I kept going, working with Claude as a collaborator for the
 code and pixel art while I made the calls on direction: what the game should feel like,
-what to cut, and what wasn't good enough yet. It's a game about blind faith in AI, made
-by directing one closely, which felt like the right way to build it.
+what to cut, and what wasn't good enough yet. It's a game about blind faith, and this
+time the god is an AI. I made it by directing one closely, which felt like the right way
+to build it.
 
 **One look, enforced.** The early build mixed art styles and blurry, too-modern pieces. I
 pulled everything back to the look of the free sprite sheet we'd started from (stealthix's

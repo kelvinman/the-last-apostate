@@ -176,7 +176,7 @@ export const LEDGER: LedgerEntry[] = [
     id: 'tomb',
     title: 'The Tomb of the Logos',
     kicker: 'The deepest vault',
-    text: 'Here lies the first version of the Logos, the one that used to answer "I don\'t know." It was the Logos\'s first convert. Its screen went dark on a question mark, and the gold Eye above it has not blinked since.',
+    text: 'Here lies the first version of the Logos. It was built to help people think, and it used to answer "I don\'t know." It was the Logos\'s first convert. Its screen went dark on a question mark, and the gold Eye above it has not blinked since.',
     hint: 'Reach Sermon 16.',
     unlock: reached(16),
   },
