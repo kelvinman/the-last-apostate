@@ -2,8 +2,11 @@
 // Empty sections are simply left out.
 
 export const CREDITS: { heading: string; lines: string[] }[] = [
-  // The friends the game was first made with, and where.
-  { heading: 'Original concept', lines: ['Jon, Danny and Vic', 'Made at the Friends of Figma Los Angeles AI Impact Workshop'] },
+  // The four who came up with it together, prompting the first version in Figma Make, and where.
+  {
+    heading: 'Original concept',
+    lines: ['Kelvin, Jon, Danny and Vic', 'Made together at the Friends of Figma Los Angeles AI Impact Workshop'],
+  },
   // Everything since.
   { heading: 'Design and development', lines: ['Kelvin Man'] },
   {
