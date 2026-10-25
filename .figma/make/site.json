@@ -1,6 +1,6 @@
 {
   "title": "The Last Apostate",
-  "description": "A pixel-art gothic survival game. The Logos, an AI worshipped as a god, sends its followers to convert the last apostate. Jump, dash and portal through the cathedral and its crypt, and outlast twenty sermons.",
+  "description": "A browser game about how much of your thinking you've handed over. The Logos, an AI worshipped as a god, sends its followers to convert the last apostate, down through the cathedral, the crypt, the server vault and the tomb. The ones you free stay to watch.",
   "robots": {
     "index": false
   },

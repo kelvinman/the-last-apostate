@@ -26,6 +26,7 @@ import {
 } from './game/engine'
 import { LEDGER, emptyLedger, recordRun, type LedgerEntry, type LedgerState } from './game/lore'
 import { epitaph, makeNarrator, narrate, type Line } from './game/narrator'
+import { makeBotMemory, steer } from './game/bot'
 import { loadAssets, render, setDangerColor, setReducedFlashing, setShakeEnabled, type Assets, type View } from './game/render'
 import { CREDITS } from './credits'
 import { Hud, SpokenLine, readHud, type HudState } from './ui/Hud'
@@ -167,7 +168,7 @@ export default function App() {
   const [touch, setTouch] = useState(false)
   /** Where the thumb stick's knob sits, in pixels from its centre. */
   const [stick, setStick] = useState({ x: 0, y: 0 })
-  const [summary, setSummary] = useState<RunSummary>({ wave: 1, kills: 0, bestCombo: 0, score: 0, by: '', mode: 'story', players: 1 })
+  const [summary, setSummary] = useState<RunSummary>({ wave: 1, kills: 0, score: 0, by: '', mode: 'story', players: 1 })
   const [muted, setMuted] = useState(() => readStorage('abc-muted') === '1')
   const [settings, setSettings] = useState<Settings>(loadSettings)
   const difficultyRef = useRef(settings.difficulty)
@@ -279,6 +280,20 @@ export default function App() {
   // A quick fade from black when a run starts or ends.
   const [curtain, setCurtain] = useState(0)
 
+  // The cycle: when nobody is playing, the apostates keep coming. A scripted apostate plays
+  // real runs (see game/bot.ts) until anyone presses anything, and then that run is theirs.
+  // Its runs never touch the Ledger or the best scores.
+  const autoRef = useRef(false)
+  const [auto, setAuto] = useState(false)
+  const botRef = useRef(makeBotMemory())
+  const lastInputRef = useRef(performance.now())
+  /** When the next scripted run starts, after one ends (0 when none is waiting). */
+  const nextCycleRef = useRef(0)
+  /** Every apostate this device has seen, played or scripted, counting on from the ninety-nine before. */
+  const [apostate, setApostate] = useState(() => Number(readStorage('abc-cycle') ?? 100))
+  // `?installation` (for a gallery or a meetup screen) opens straight into the cycle.
+  const installation = useRef(new URLSearchParams(window.location.search).has('installation')).current
+
   // The first story run teaches the basics one hint at a time (see ui/tutorial.ts).
   const tutorialRef = useRef<Tutorial | null>(null)
   const [lesson, setLesson] = useState<number | null>(null)
@@ -343,6 +358,30 @@ export default function App() {
     setPhase(next)
   }, [])
 
+  /** Put a new run on screen, whoever is playing it, and count its apostate. */
+  const launch = useCallback((game: Game) => {
+    const next = Number(readStorage('abc-cycle') ?? 100) + 1
+    writeStorage('abc-cycle', String(next))
+    setApostate(next)
+    nextCycleRef.current = 0
+    setCurtain((value) => value + 1)
+    game.phase = 'playing'
+    startWave(game)
+    gameRef.current = game
+    narratorRef.current = makeNarrator(ledgerRef.current)
+    setLine(null)
+    for (const input of inputsRef.current) input.pressed.clear()
+    setLevels({})
+    setNewBest(false)
+    setBest(Number(readStorage(bestKey(game.mode, game.difficulty)) ?? 0))
+    setCurses(game.curses)
+    setHud(readHud(game))
+    phaseRef.current = 'playing'
+    setPhase('playing')
+    tutorialRef.current = null
+    setLesson(null)
+  }, [])
+
   /** Start a run in the given mode (or the last one chosen), with the chosen number of players. */
   const startGame = useCallback((chosen?: Mode) => {
     unlockAudio()
@@ -354,29 +393,69 @@ export default function App() {
     // Touch screens have one set of controls, so they always play alone.
     const count = window.matchMedia('(pointer: coarse)').matches ? 1 : playersRef.current
     const game = makeGame({ mode: modeRef.current, players: count, difficulty: difficultyRef.current })
-    setCurtain((value) => value + 1)
-    game.phase = 'playing'
-    startWave(game)
-    gameRef.current = game
-    narratorRef.current = makeNarrator(ledgerRef.current)
-    setLine(null)
-    for (const input of inputsRef.current) input.pressed.clear()
-    setLevels({})
-    setNewBest(false)
-    setBest(Number(readStorage(bestKey(modeRef.current, game.difficulty)) ?? 0))
-    setCurses(game.curses)
-    setHud(readHud(game))
-    phaseRef.current = 'playing'
-    setPhase('playing')
+    autoRef.current = false
+    setAuto(false)
+    launch(game)
     // The first solo story run gets the tutorial; a first co-op run gets a card with both players' controls.
-    tutorialRef.current = null
-    setLesson(null)
     if (modeRef.current === 'story' && count === 1 && !readStorage('abc-tutorial-done')) {
       tutorialRef.current = startTutorial(game)
       setLesson(0)
     } else if (!readStorage(count > 1 ? 'abc-seen-coop-controls' : 'abc-seen-controls')) {
       controlsCardRef.current = true
       setControlsCard(true)
+    }
+  }, [launch])
+
+  /** The next apostate in the cycle, played by the script. */
+  const startCycle = useCallback(() => {
+    const game = makeGame({ mode: 'story', players: 1 })
+    autoRef.current = true
+    setAuto(true)
+    botRef.current = makeBotMemory()
+    launch(game)
+  }, [launch])
+  const startCycleRef = useRef(startCycle)
+  startCycleRef.current = startCycle
+
+  /** Anyone pressing anything during the cycle takes over the run in progress. Returns whether it did. */
+  const takeOver = useCallback(
+    (device?: Device) => {
+      lastInputRef.current = performance.now()
+      if (!autoRef.current) return false
+      autoRef.current = false
+      setAuto(false)
+      unlockAudio()
+      startMusic()
+      if (device) markDevice(device)
+      for (const input of inputsRef.current) input.pressed.clear()
+      // A run that has just ended can't be taken over: back to the title instead.
+      const game = gameRef.current
+      if (game.phase === 'dead' || game.phase === 'won') {
+        nextCycleRef.current = 0
+        game.phase = 'title'
+        phaseRef.current = 'title'
+        setPhase('title')
+      }
+      return true
+    },
+    [markDevice],
+  )
+  const takeOverRef = useRef(takeOver)
+  takeOverRef.current = takeOver
+
+  // A tap or click takes over the cycle too; moving the mouse only counts as someone being here.
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (takeOverRef.current(event.pointerType === 'touch' ? 'touch' : undefined)) event.preventDefault()
+    }
+    const onPointerMove = () => {
+      lastInputRef.current = performance.now()
+    }
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('pointermove', onPointerMove)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('pointermove', onPointerMove)
     }
   }, [])
 
@@ -414,6 +493,18 @@ export default function App() {
   useEffect(() => {
     const onKeyDown = (event: Pick<KeyboardEvent, 'code' | 'repeat' | 'preventDefault'> & { fromPad?: boolean }) => {
       const game = gameRef.current
+      // During the cycle, Escape leaves it for the title; any other key takes over the run.
+      if (autoRef.current && event.code === 'Escape') {
+        event.preventDefault()
+        takeOverRef.current('keys')
+        nextCycleRef.current = 0
+        goTo('title')
+        return
+      }
+      if (takeOverRef.current(event.fromPad ? 'pad' : 'keys')) {
+        event.preventDefault()
+        return
+      }
       unlockAudio()
       markDevice(event.fromPad ? 'pad' : 'keys')
 
@@ -567,7 +658,7 @@ export default function App() {
     const onBlur = () => {
       heldRef.current.clear()
       touchRef.current = { left: false, right: false, down: false, jump: false }
-      if (gameRef.current.phase === 'playing') goTo('paused')
+      if (gameRef.current.phase === 'playing' && !autoRef.current) goTo('paused')
     }
     const onVisibility = () => {
       if (document.hidden) onBlur()
@@ -675,6 +766,9 @@ export default function App() {
 
       // Gamepads: in play they drive their player; on menus they press the keys they stand for.
       const pads = readPads(count)
+      if (pads.some((reading) => reading.menu.length || reading.pressed.size || reading.left || reading.right)) {
+        if (takeOverRef.current('pad')) for (const reading of pads) reading.menu.length = 0
+      }
       for (const pad of pads) {
         for (const key of pad.menu) {
           if (game.phase === 'playing' && key !== 'Start') continue
@@ -683,10 +777,13 @@ export default function App() {
         }
       }
 
+      if (game.phase === 'playing' && autoRef.current) {
+        steer(game, game.player, inputs[0], botRef.current, dt)
+      }
       if (game.phase === 'playing') {
         const held = heldRef.current
         const touchState = touchRef.current
-        for (let index = 0; index < count; index += 1) {
+        for (let index = 0; index < (autoRef.current ? 0 : count); index += 1) {
           const input = inputs[index]
           const keys = heldKeys(held, index, count)
           const pad = pads.filter((reading) => reading.player === index)
@@ -765,12 +862,14 @@ export default function App() {
           select(Math.floor(game.offers.length / 2))
           offersOpenedAtRef.current = performance.now()
         }
-        if (game.phase === 'dead' || game.phase === 'won') {
+        if ((game.phase === 'dead' || game.phase === 'won') && autoRef.current) {
+          // A scripted apostate falls: no results, no Ledger. The next one comes shortly.
+          nextCycleRef.current = now + 3500
+        } else if (game.phase === 'dead' || game.phase === 'won') {
           setCurtain((value) => value + 1)
           setSummary({
             wave: game.wave,
             kills: game.kills,
-            bestCombo: game.bestCombo,
             score: game.score,
             by: game.lastHurtBy,
             mode: game.mode,
@@ -810,6 +909,22 @@ export default function App() {
         const view = viewRef.current
         view.offsetX = (view.width - follow.span * view.scale) / 2 - cameraX * view.scale
       }
+
+      // The cycle chooses its doctrines after a moment, and starts the next apostate after a fall.
+      if (autoRef.current && game.phase === 'upgrade' && now - offersOpenedAtRef.current > 1600 && game.offers.length) {
+        chooseUpgrade(game, game.offers[Math.floor(Math.random() * game.offers.length)])
+        setLevels({ ...game.levels })
+        setOffers([])
+        setCurses(game.curses)
+        game.phase = 'playing'
+      }
+      if (autoRef.current && nextCycleRef.current && now > nextCycleRef.current) startCycleRef.current()
+      // Nobody at the title (or, in an installation, at the results) for a while: the cycle resumes.
+      const idle = now - lastInputRef.current
+      const resting =
+        (game.phase === 'title' && !optionsOpenRef.current && !ledgerOpenRef.current && idle > (installation ? 4000 : 20000)) ||
+        (installation && (game.phase === 'dead' || game.phase === 'won') && idle > 30000)
+      if (resting && !autoRef.current && assetsRef.current) startCycleRef.current()
 
       const assets = assetsRef.current
       if (assets) render(ctx, game, assets, viewRef.current)
@@ -1027,7 +1142,7 @@ export default function App() {
           <Hud
             hud={hud}
             flashing={flashing}
-            showPauseButton={touch && (playing || phase === 'paused')}
+            showPauseButton={touch && !auto && (playing || phase === 'paused')}
             onPause={togglePause}
             onDash={() => {
               unlockAudio()
@@ -1058,7 +1173,7 @@ export default function App() {
         {/* After the controls card, so CSS can move the line clear of it. */}
         {(playing || phase === 'paused') && line && <SpokenLine key={`line-${line.id}`} line={line} paused={!playing} />}
 
-        {touch && playing && (
+        {touch && playing && !auto && (
           <div className="touch-controls">
             <div className="touch-stick" role="group" aria-label="Move, and pull down to drop" {...stickTouch}>
               <span className="stick-arrow is-left" aria-hidden="true">◀</span>
@@ -1144,11 +1259,22 @@ export default function App() {
           </div>
         )}
 
-        {phase === 'upgrade' && (
+        {phase === 'upgrade' && !auto && (
           <UpgradeScreen wave={hud.wave} offers={offers} levels={levels} selected={selected} onSelect={select} onPick={pick} />
         )}
 
-        {(phase === 'dead' || phase === 'won') && (
+        {auto && (
+          <div className="cycle-card" aria-live="polite">
+            <span className="label accent">Apostate {apostate.toLocaleString()}</span>
+            <p>
+              {phase === 'dead' || phase === 'won'
+                ? 'Converted. The next one is already on the way.'
+                : `${device === 'touch' ? 'Tap' : 'Press any key'} to take over`}
+            </p>
+          </div>
+        )}
+
+        {(phase === 'dead' || phase === 'won') && !auto && (
           <ResultsScreen
             won={phase === 'won'}
             summary={summary}

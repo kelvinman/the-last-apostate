@@ -11,56 +11,15 @@
 // keeps its distance, jumps blood spit and shockwaves, and dashes when cornered; a real
 // player using ledges and portals should do better than it.
 
+import { steer } from '../src/game/bot'
 import { DIFFICULTIES, MAX_WAVE, chooseUpgrade, makeGame, startWave, step, type Difficulty, type Game, type Input } from '../src/game/engine'
 
 type Strategy = (g: Game, input: Input) => void
 
 const idle: Strategy = () => {}
 
-const dodger: Strategy = (g, input) => {
-  const p = g.player
-  let nearest: Game['enemies'][number] | null = null
-  let distance = Infinity
-  for (const e of g.enemies) {
-    const d = Math.hypot(e.x - p.x, e.y - e.h / 2 - (p.y - p.h / 2))
-    if (d < distance) {
-      distance = d
-      nearest = e
-    }
-  }
-  input.left = false
-  input.right = false
-  input.jumpHeld = false
-  // Jump anything heading this way: orbs at body height, waves along the ground.
-  for (const spit of g.spits) {
-    const time = (p.x - spit.x) / (spit.vx || 1e-6)
-    if (time <= 0 || time > 0.35) continue
-    const height = spit.kind === 'wave' ? Math.abs(spit.y - p.y) < 12 : Math.abs(spit.y + spit.vy * time - (p.y - 35)) < 45
-    if (height) {
-      input.pressed.add('jump')
-      input.jumpHeld = true
-      if (time < 0.15) input.pressed.add('dash')
-    }
-  }
-  if (!nearest) {
-    if (Math.abs(640 - p.x) > 40) input[640 > p.x ? 'right' : 'left'] = true
-    return
-  }
-  const dx = nearest.x - p.x
-  if (distance < 180) input[dx > 0 ? 'left' : 'right'] = true
-  else if (distance > 380) input[dx > 0 ? 'right' : 'left'] = true
-  if ((p.x < 60 && input.left) || (p.x > 1220 && input.right)) {
-    input.left = !input.left
-    input.right = !input.right
-    input.pressed.add('jump')
-    input.jumpHeld = true
-  }
-  if (distance < 110) {
-    input.pressed.add('jump')
-    input.jumpHeld = true
-  }
-  if (distance < 70) input.pressed.add('dash')
-}
+// The same scripted apostate the cycle mode plays, without its wandering (see src/game/bot.ts).
+const dodger: Strategy = (g, input) => steer(g, g.player, input)
 
 const difficulty = (process.argv[3] ?? 'apostate') as Difficulty
 if (!(difficulty in DIFFICULTIES)) throw new Error(`Unknown difficulty: ${difficulty}`)

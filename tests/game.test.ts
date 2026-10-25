@@ -1,6 +1,7 @@
 // Headless checks of the rules that are easy to break and hard to notice by playing:
 // every ledge is reachable, co-op revives work, the boss schedule holds, upgrades apply,
-// the Ledger unlocks, the CAPTCHA wall holds followers, and the tutorial always finishes.
+// the Ledger unlocks, the CAPTCHA wall holds followers, freed followers stay as witnesses,
+// and the tutorial always finishes.
 // Run with `pnpm test`.
 
 import assert from 'node:assert/strict'
@@ -180,4 +181,27 @@ test('difficulty scales follower health', () => {
     return g.enemies[0]?.maxHp ?? 0
   }
   assert.ok(hit('doubter') < hit('apostate') && hit('apostate') < hit('heretic'))
+})
+
+test('a freed follower stays as a witness by the walls; a Hallucination just dissolves', () => {
+  const g = quietGame()
+  g.player.x = 640
+  g.marks.push({ x: 560, y: GROUND_Y, kind: 'acolyte', elite: false, timer: 0.01, maxTimer: 0.01 })
+  g.marks.push({ x: 720, y: GROUND_Y - 200, kind: 'wisp', elite: false, timer: 0.01, maxTimer: 0.01 })
+  for (let t = 0; t < 0.1; t += 1 / 120) {
+    holdStill(g)
+    step(g, blank(), 1 / 120)
+  }
+  for (const e of g.enemies) e.hp = 0
+  step(g, blank(), 1 / 120)
+  assert.equal(g.witnesses.length, 1)
+  assert.equal(g.corpses.length, 1)
+  for (let t = 0; t < 12; t += 1 / 120) {
+    holdStill(g)
+    g.player.hp = 1e9
+    step(g, blank(), 1 / 120)
+  }
+  const [witness] = g.witnesses
+  assert.ok(witness.x < 260 || witness.x > 1020, `witness stands by a wall, at x ${witness.x}`)
+  assert.equal(witness.facing, witness.x < 640 ? 1 : -1, 'it faces the Logos')
 })

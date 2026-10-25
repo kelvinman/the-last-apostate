@@ -1,7 +1,7 @@
 {
   "name": "The Last Apostate",
   "short_name": "The Last Apostate",
-  "description": "A browser game about the comfort of certainty, and the last person who refuses it.",
+  "description": "A browser game about how much of your thinking you've handed over.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

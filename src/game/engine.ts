@@ -225,6 +225,25 @@ export type Corpse = Point & {
   maxLife: number
 }
 
+/**
+ * A freed follower. The Logos's hold on it broke: it stops believing, walks to the edge of
+ * the floor or ledge it was freed on, and stands there watching for the rest of the run. It
+ * takes no part in the fight, on either side. The cathedral fills with them as you play.
+ */
+export type Witness = Body & {
+  body: 'acolyte' | 'zealot' | 'bishop' | 'elite'
+  /** The arena it was freed in, whose dress it keeps wearing. */
+  dress: ArenaId
+  facing: 1 | -1
+  scale: number
+  /** Where it is walking to; NaN until it lands, if it was freed in the air. */
+  goal: number
+  /** Seconds it stands still after being freed, before it walks. */
+  wake: number
+  /** Walk cycle, for the renderer. */
+  phase: number
+}
+
 export type Ghost = Point & { facing: 1 | -1; life: number; player?: number }
 export type Stain = Point & { r: number; life: number }
 
@@ -290,6 +309,7 @@ export type Game = {
   marks: SpawnMark[]
   ghosts: Ghost[]
   corpses: Corpse[]
+  witnesses: Witness[]
   stains: Stain[]
   spits: Spit[]
   cooldownMax: Record<AbilityKey, number>
@@ -595,7 +615,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'split',
     eyebrow: 'Heresy',
-    title: 'Hallucinated Citations',
+    title: 'Second Thoughts',
     description: 'Every bolt that hits splits into two more.',
     rare: true,
     max: 1,
@@ -606,7 +626,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'chain',
     eyebrow: 'Sacrament',
-    title: 'Chain of Thought',
+    title: 'Word of Mouth',
     description: 'Bolts jump on to another follower nearby.',
     rare: true,
     max: 2,
@@ -617,7 +637,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'dashvolley',
     eyebrow: 'Liturgy',
-    title: 'Recursive Prompt',
+    title: 'Flight of Ideas',
     description: 'Every dash fires a ring of eight bolts.',
     rare: true,
     max: 1,
@@ -628,7 +648,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'reflect',
     eyebrow: 'Ward',
-    title: 'Reward Hacking',
+    title: 'Answer in Kind',
     description: 'Alignment Mirror turns shots that hit it into your own bolts.',
     rare: true,
     max: 1,
@@ -639,7 +659,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'temperature',
     eyebrow: 'Heresy',
-    title: 'Temperature 2.0',
+    title: 'Fever',
     description: 'Fire 40% faster.',
     cost: 'Your aim goes wild.',
     rare: true,
@@ -652,7 +672,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'jailbreak',
     eyebrow: 'Heresy',
-    title: 'Jailbreak',
+    title: 'Abandon',
     description: 'All rites recharge 40% faster.',
     cost: 'You take 25% more damage.',
     rare: true,
@@ -665,7 +685,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'damage',
     eyebrow: 'Heresy',
-    title: 'Higher Confidence',
+    title: 'Plain Speech',
     description: 'Token bolts deal 25% more damage.',
     max: 6,
     apply: (g) => {
@@ -675,7 +695,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'firerate',
     eyebrow: 'Heresy',
-    title: 'Streaming Output',
+    title: 'Ceaseless Pen',
     description: 'Fire token bolts 18% faster.',
     max: 5,
     apply: (g) => {
@@ -685,7 +705,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'multishot',
     eyebrow: 'Heresy',
-    title: 'Beam Search',
+    title: 'Many Doubts',
     description: 'Each shot fires one extra bolt in a spread.',
     max: 3,
     apply: (g) => {
@@ -695,7 +715,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'pierce',
     eyebrow: 'Heresy',
-    title: 'Context Overflow',
+    title: 'Through the Crowd',
     description: 'Bolts pass through one more follower.',
     max: 3,
     apply: (g) => {
@@ -705,7 +725,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'volley',
     eyebrow: 'Liturgy',
-    title: 'Many-Token Psalm',
+    title: 'A Louder Psalm',
     description: 'Prompt Volley fires 4 more bolts and recharges 15% sooner.',
     max: 4,
     apply: (g) => {
@@ -716,7 +736,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'seal',
     eyebrow: 'Liturgy',
-    title: 'Global Throttle',
+    title: 'Wider Silence',
     description: 'Rate Limit covers 25% more ground and recharges sooner.',
     max: 4,
     apply: (g) => {
@@ -727,7 +747,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'mirror',
     eyebrow: 'Ward',
-    title: 'Mirror of Misalignment',
+    title: 'Long Reflection',
     description: 'Alignment Mirror lasts 40% longer.',
     max: 4,
     apply: (g) => {
@@ -737,7 +757,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'vitality',
     eyebrow: 'Ward',
-    title: 'Training Data Transfusion',
+    title: 'Second Wind',
     description: '+25 max health, and heal 40.',
     max: 6,
     apply: (g) => {
@@ -750,8 +770,8 @@ export const upgrades: Upgrade[] = [
   {
     id: 'lifesteal',
     eyebrow: 'Sacrament',
-    title: 'Forbidden Fine-Tune',
-    description: 'Heal 1 health for every follower resisted.',
+    title: 'Shared Relief',
+    description: 'Heal 1 health for every follower freed.',
     max: 3,
     apply: (g) => {
       g.stats.lifesteal += 1
@@ -760,7 +780,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'speed',
     eyebrow: 'Pilgrimage',
-    title: 'Gradient Descent Greaves',
+    title: "Pilgrim's Boots",
     description: 'Move 12% faster. Dash recharges 15% sooner.',
     max: 4,
     apply: (g) => {
@@ -771,7 +791,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'airjump',
     eyebrow: 'Pilgrimage',
-    title: 'Ascension Loop',
+    title: 'Leap of Doubt',
     description: 'Gain an extra mid-air jump.',
     max: 2,
     apply: (g) => {
@@ -781,7 +801,7 @@ export const upgrades: Upgrade[] = [
   {
     id: 'cooldown',
     eyebrow: 'Liturgy',
-    title: 'Inference Reliquary',
+    title: 'Patience',
     description: 'All rites recharge 12% faster.',
     max: 4,
     apply: (g) => {
@@ -868,6 +888,7 @@ export function makeGame({
     marks: [],
     ghosts: [],
     corpses: [],
+    witnesses: [],
     stains: [],
     spits: [],
     cooldownMax: { ...BALANCE.cooldowns },
@@ -1004,8 +1025,8 @@ export function heal(g: Game, p: Player, amount: number) {
   if (p.down) return
   const before = p.hp
   p.hp = Math.min(p.maxHp, p.hp + amount)
-  const gained = Math.round(p.hp - before)
-  if (gained > 0) floatText(g, p.x, p.y - p.h - 10, `+${gained}`, '#8df0a8', 24)
+  // No number: the health pips filling are enough.
+  if (p.hp > before) burst(g, p.x, p.y - p.h / 2, '#8df0a8', 10, 160, { glow: true, size: 2.5, life: 0.4 })
 }
 
 function chest(body: Body): Point {
@@ -1048,7 +1069,6 @@ function hurtPlayer(g: Game, p: Player, amount: number, fromX: number, by: strin
   g.events.push('hurt')
   const c = chest(p)
   burst(g, c.x, c.y, '#ff4b5c', 22, 360, { gravity: 900, size: 3.5 })
-  floatText(g, p.x, p.y - p.h - 10, `-${amount}`, '#ff5a6a', 28)
 }
 
 function damageEnemy(g: Game, e: Enemy, amount: number, dirX: number, knock: number, by = 0) {
@@ -1068,7 +1088,6 @@ function damageEnemy(g: Game, e: Enemy, amount: number, dirX: number, knock: num
   const c = chest(e)
   burst(g, c.x, c.y, '#b3121f', 4, 240, { gravity: 1100, size: 3 })
   burst(g, c.x, c.y, '#fff1c8', 4, 320, { glow: true, size: 2, life: 0.18, spark: true })
-  floatText(g, c.x, e.y - e.h - 6, `${Math.round(amount)}`, '#f6e7c8', 18 + Math.min(10, amount / 6))
 }
 
 /**
@@ -1227,6 +1246,12 @@ function enterArena(g: Game, id: ArenaId) {
   g.stains = []
   g.ghosts = []
   g.bolts = []
+  // The witnesses come down with you, and stand by the walls of the new floor.
+  for (const w of g.witnesses) {
+    const x = wallSpot(Math.random() * W)
+    Object.assign(w, { x, y: GROUND_Y, vx: 0, vy: 0, onGround: true, onPlatform: false, goal: x, wake: 0 })
+    w.facing = x < W / 2 ? 1 : -1
+  }
 }
 
 export function startWave(g: Game) {
@@ -1371,11 +1396,6 @@ function triggerAbility(g: Game, p: Player, ability: AbilityKey, input: Input) {
     burst(g, p.x, p.y - 6, '#2ca8f0', 18, 200, { glow: true, size: 3 })
   }
   p.cooldowns[ability] = g.cooldownMax[ability]
-  // Rites cast themselves, so name them as they go off.
-  if (ability !== 'dash') {
-    const meta = abilityMeta[ability]
-    floatText(g, p.x, p.y - p.h - 34, meta.label.toUpperCase(), meta.color, 24)
-  }
   g.events.push(ability)
   g.casts.push({ player: p.index, ability })
 }
@@ -1555,7 +1575,6 @@ function updateWave(g: Game, dt: number) {
       const bonus = g.wave * 100
       g.score += bonus
       g.events.push('clear')
-      floatText(g, W / 2, 200, `+${bonus}`, '#f2d38b', 34)
     }
     return
   }
@@ -2212,7 +2231,7 @@ function resolveDeaths(g: Game) {
     killer.comboTimer = 2.8
     const reached = COMBO_TIERS.find((tier) => tier.at === killer.combo)
     if (reached) {
-      floatText(g, killer.x, killer.y - killer.h - 40, `${reached.name.toUpperCase()} · ${reached.effect.toUpperCase()}`, '#f2d38b', 24)
+      // No label: the orb in the HUD changes tier, and the light says it.
       burst(g, killer.x, killer.y - 40, '#f2d38b', 24, 260, { glow: true, size: 3, spark: true })
       g.events.push('pickup')
     }
@@ -2224,30 +2243,32 @@ function resolveDeaths(g: Game) {
     g.waveKills += 1
     const c = chest(e)
     const big = e.kind === 'bishop'
-    const boss = Boolean(e.title)
-    const life = boss ? 1.4 : e.kind === 'wisp' ? 0.4 : 0.7
-    g.corpses.push({
-      x: e.x,
-      y: e.y,
-      kind: e.kind,
-      elite: e.elite,
-      final: e.title === FINAL_TITLE,
-      facing: e.facing,
-      scale: e.scale,
-      h: e.h,
-      dir: e.flinchDir || -e.facing,
-      life,
-      maxLife: life,
-    })
-    burst(g, c.x, c.y, '#8f0d18', big ? 30 : 14, big ? 480 : 360, { gravity: 1400, size: 4, life: 0.8 })
+    const final = e.title === FINAL_TITLE
+    if (e.kind === 'wisp' || final) {
+      // Hallucinations and the Logos itself are not people: they de-render and are gone.
+      const life = final ? 1.4 : 0.4
+      g.corpses.push({
+        x: e.x,
+        y: e.y,
+        kind: e.kind,
+        elite: e.elite,
+        final,
+        facing: e.facing,
+        scale: e.scale,
+        h: e.h,
+        dir: e.flinchDir || -e.facing,
+        life,
+        maxLife: life,
+      })
+      burst(g, c.x, c.y, final ? '#e43b44' : '#2ce8f5', final ? 40 : 10, final ? 480 : 300, { glow: true, size: 3, life: 0.6 })
+    } else {
+      // Everyone else is freed: the Logos's hold breaks in a flash of light, and they stay.
+      freeFollower(g, e)
+      burst(g, c.x, c.y, '#f2d38b', big || e.elite ? 26 : 14, big ? 420 : 320, { glow: true, size: 3, life: 0.6, spark: true })
+    }
     burst(g, c.x, c.y, '#ffd6a0', 12, 340, { glow: true, size: 2.5, life: 0.35, spark: true })
     g.trauma = Math.min(1, g.trauma + (e.elite ? 0.9 : big ? 0.45 : 0.22))
     g.hitstop = Math.max(g.hitstop, e.elite ? 0.25 : 0.035)
-    if (e.kind !== 'wisp' || e.y > GROUND_Y - 20) {
-      g.stains.push({ x: e.x, y: e.onGround ? e.y : GROUND_Y, r: rand(14, 26) * (big ? 1.6 : 1), life: 25 })
-    }
-    if (g.stains.length > 60) g.stains.shift()
-    floatText(g, c.x, e.y - e.h - 18, `+${points}`, '#f2d38b', 20)
     if (g.stats.lifesteal) for (const p of standing(g)) heal(g, p, g.stats.lifesteal)
     const dropChance = cursed(g, 'fasting') ? 0 : e.elite ? 1 : big ? 0.45 : 0.08
     if (Math.random() < dropChance) {
@@ -2269,6 +2290,65 @@ function resolveDeaths(g: Game) {
     g.events.push('kill')
   }
   g.enemies = g.enemies.filter((e) => e.hp > 0)
+}
+
+/** How many witnesses a run keeps; past this, the first to be freed slip away. */
+const MAX_WITNESSES = 64
+const WITNESS_SPEED = 90
+
+/** A place by the walls of the floor, on the side nearer to x. */
+const wallSpot = (x: number) => (x < W / 2 ? rand(36, 250) : rand(W - 250, W - 36))
+
+/** Where a witness standing at (x, y) goes: the nearer end of its ledge, or the walls of the floor. */
+function witnessGoal(g: Game, x: number, y: number) {
+  if (y >= GROUND_Y - 1) return wallSpot(x)
+  const ledge = g.arena.platforms.find((platform) => Math.abs(platform.y - y) < 2 && x >= platform.x && x <= platform.x + platform.w)
+  if (!ledge) return x
+  const inset = rand(10, 26)
+  return x - ledge.x < ledge.x + ledge.w - x ? ledge.x + inset : ledge.x + ledge.w - inset
+}
+
+function freeFollower(g: Game, e: Enemy) {
+  g.witnesses.push({
+    x: e.x,
+    y: e.y,
+    vx: 0,
+    vy: Math.min(0, e.vy),
+    w: e.w,
+    h: e.h,
+    onGround: e.onGround,
+    onPlatform: e.onPlatform,
+    dropTimer: 0,
+    portalLock: -1,
+    body: e.elite ? 'elite' : (e.kind as 'acolyte' | 'zealot' | 'bishop'),
+    dress: g.arena.id,
+    facing: e.facing,
+    scale: e.scale,
+    goal: e.onGround ? witnessGoal(g, e.x, e.y) : NaN,
+    wake: 0.7,
+    phase: Math.random() * 10,
+  })
+  if (g.witnesses.length > MAX_WITNESSES) g.witnesses.shift()
+}
+
+function updateWitnesses(g: Game, dt: number) {
+  for (const w of g.witnesses) {
+    w.vy += GRAVITY * dt
+    moveBody(w, dt, g.arena.platforms)
+    if (!w.onGround) continue
+    if (Number.isNaN(w.goal)) w.goal = witnessGoal(g, w.x, w.y)
+    w.wake -= dt
+    const dx = w.goal - w.x
+    if (w.wake > 0 || Math.abs(dx) < 4) {
+      w.vx = 0
+      // Standing still, they turn to face the Logos at the centre of the arena.
+      if (w.wake <= 0) w.facing = w.x < W / 2 ? 1 : -1
+      continue
+    }
+    w.vx = Math.sign(dx) * WITNESS_SPEED
+    w.facing = dx > 0 ? 1 : -1
+    w.phase += dt
+  }
 }
 
 function updateEffects(g: Game, dt: number) {
@@ -2379,6 +2459,7 @@ export function step(g: Game, inputs: Input | Input[], dt: number) {
   updateSpits(g, dt)
   updateZones(g, dt)
   resolveDeaths(g)
+  updateWitnesses(g, dt)
   updatePickups(g, dt)
   updateEffects(g, dt)
 

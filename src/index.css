@@ -1553,7 +1553,7 @@
     height: min(96px, 25vw);
   }
 
-  /* The corner fills the width, so the free will moves to the top-right, above pause. */
+  /* The corner fills the width, so the sermon moves to the top-right. */
   .sermon-title {
     left: auto;
     right: max(16px, env(safe-area-inset-right));
@@ -1561,12 +1561,8 @@
     justify-items: end;
   }
 
-  .score {
-    font-size: 26px;
-  }
-
   .pause-button {
-    top: calc(max(14px, env(safe-area-inset-top)) + 40px);
+    top: max(14px, env(safe-area-inset-top));
   }
 
   /* .game for weight over the small-screen rules further down. */
@@ -2167,4 +2163,64 @@
     font-size: 14px;
     line-height: 1;
   }
+}
+
+/* The cycle: while the scripted apostate plays, a quiet line at the bottom says who this is
+   and how to step in. Unframed and outlined, like the HUD. */
+.cycle-card {
+  --outline:
+    2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink),
+    2px 2px 0 var(--ink), -2px 2px 0 var(--ink), 2px -2px 0 var(--ink), -2px -2px 0 var(--ink);
+  position: absolute;
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
+  left: 50%;
+  translate: -50% 0;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: min(560px, calc(100% - 32px));
+  text-align: center;
+  text-shadow: var(--outline);
+  pointer-events: none;
+}
+
+.cycle-card p {
+  margin: 0;
+  font-family: var(--pixel);
+  font-size: 24px;
+  color: var(--cream);
+  animation: cycle-breathe 2.4s steps(6) infinite;
+}
+
+@keyframes cycle-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.game.is-calm .cycle-card p {
+  animation: none;
+}
+
+/* The end screen keeps three quiet numbers, wherever the screen is. */
+.stats.is-quiet {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* The ending: the Ledger's last page, set like a page rather than a stat. */
+.end-panel.is-ending .ledger-page {
+  display: grid;
+  gap: 4px;
+  max-width: 46ch;
+  padding: 10px 16px;
+  background: var(--wood0);
+  box-shadow: var(--inset);
+}
+
+.end-panel.is-ending .ledger-page p {
+  margin: 0;
+  font-family: var(--pixel);
+  font-size: 20px;
+  line-height: 1.1;
+  color: var(--cream);
 }

@@ -6,10 +6,8 @@
 
 ![The title screen](docs/title.jpg)
 
-The Last Apostate is about the comfort of certainty. The Logos doesn't conquer anyone: it
-offers to do their thinking for them, and almost everyone accepts. You play the one person
-who keeps writing by hand, slowly and badly, crossing things out. The game can't be won by
-being right. It can only be survived by refusing to stop thinking.
+How much of your thinking have you handed over? How much of it did you notice? I made this
+game by directing an AI, and I'm still asking myself the same thing.
 
 ---
 
@@ -28,6 +26,11 @@ phones, Evangelists waving placards, Hype Bishops who spit promises, and Halluci
 its mistakes given a body. They are funny because the hype is funny. The Logos isn't.
 It is not the enemy because it is a machine. It is the enemy because it was made a god.
 
+**Witnesses.** Your quill never kills anyone. Each follower it reaches is freed: it stops
+believing, walks to the walls and stands there watching, no longer the Logos's but not
+yours either. The cathedral fills with witnesses as you play, and the Logos is speaking to
+fewer and fewer.
+
 **A descent.** Each chapter of the game goes deeper into the Logos. The nave is its
 interface, where the congregation gathers. The crypt is its memory, where the ninety-nine
 apostates before you were pressed into training data. The server vault is its body. The
@@ -40,7 +43,9 @@ if you reach it, is the one thing it has never said.
 
 **The hundredth cycle.** You are not the first to refuse. Every run ends, and every run
 begins again; between them, the Ledger fills page by page with the stories of those who
-came before you. Endless mode is what refusal costs: the cycle simply restarts.
+came before you. Endless mode is what refusal costs: the cycle simply restarts. And when
+nobody is playing, the cycle plays itself: another apostate holds out and falls, again and
+again, until someone picks up the controls and takes over that run.
 
 ![Sermon 18, in the tomb of the Logos](docs/tomb.jpg)
 
@@ -49,10 +54,10 @@ came before you. Endless mode is what refusal costs: the cycle simply restarts.
 The Last Apostate started at the workshop with Jon, Danny and Vic, where we prototyped it
 in Figma Make: a gothic cathedral, an AI god, and a lone apostate holding out against its
 followers. After the workshop I kept going, working with Claude as a collaborator for the
-code and pixel art while I made the calls on direction: what the game should feel like,
-what to cut, and what wasn't good enough yet. It's a game about blind faith, and this
-time the god is an AI. I made it by directing one closely, which felt like the right way
-to build it.
+code, the pixel art and most of the writing, while I made the calls on direction: what the
+game should feel like, what to cut, and what wasn't good enough yet. It's a game about
+blind faith, and this time the god is an AI. I made it by directing one closely, which felt
+like the right way to build it.
 
 **One look, enforced.** The early build mixed art styles and blurry, too-modern pieces. I
 pulled everything back to the look of the free sprite sheet we'd started from (stealthix's
@@ -92,6 +97,11 @@ or two on one keyboard or with gamepads.
 
 In co-op, player one keeps WASD and left Shift; player two uses the arrows and right
 Shift. Keys can be rebound in Settings.
+
+For a gallery or meetup screen, open
+[the installation link](https://kelvinman.github.io/the-last-apostate/?installation): it goes
+straight into the cycle, any key, tap or gamepad press takes over the run in progress, and
+it returns to the cycle once the visitor walks away.
 
 <details>
 <summary>Technical notes</summary>

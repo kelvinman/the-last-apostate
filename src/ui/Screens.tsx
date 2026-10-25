@@ -52,7 +52,7 @@ export function TitleScreen({
         </h1>
         <p className="lede">
           The Logos promised its followers perfect certainty. Now they pour through the nave to convert the
-          last apostate: you. Turn its own tokens against it, and outlast twenty sermons.
+          last apostate: you.
         </p>
         <div className="stack run-picker">
           {/* Players first: it applies to whichever mode starts. */}
@@ -225,7 +225,7 @@ export function SermonBanner({ wave, waveState, curses, mode }: { wave: number; 
   if (waveState === 'cleared') {
     return (
       <div className="banner is-cleared" key={`clear-${wave}`}>
-        <span className="label">Followers resisted</span>
+        <span className="label">Followers freed</span>
         <strong>Sermon cleared</strong>
       </div>
     )
@@ -453,7 +453,6 @@ export function UpgradeScreen({
 export type RunSummary = {
   wave: number
   kills: number
-  bestCombo: number
   score: number
   by: string
   mode: Mode
@@ -486,41 +485,70 @@ export function ResultsScreen({
   onRestart: () => void
   onTitle: () => void
 }) {
+  // The ending is not a results screen: the Logos's last word, the quiet, and the Ledger's
+  // last page. No numbers.
+  if (won) {
+    const lastPage = LEDGER.find((entry) => entry.id === 'name')
+    return (
+      <div className="overlay">
+        <div className="panel small-panel end-panel is-ending">
+          <span className="label accent">The final sermon</span>
+          <blockquote className="epitaph">
+            <p>“{epitaph}”</p>
+            <cite>The Logos</cite>
+          </blockquote>
+          <h2>The Logos could not convert you.</h2>
+          <p className="lede">
+            Its followers fall silent. For the first time in a hundred cycles, the cathedral is quiet, and the thinking is yours again.
+          </p>
+          {lastPage && (
+            <div className="ledger-page">
+              <span className="label">{lastPage.title}</span>
+              <p>{lastPage.text}</p>
+            </div>
+          )}
+          <div className="stack">
+            <button type="button" className="secondary" onClick={onRestart} autoFocus>
+              Begin again <kbd data-pad="A">Enter</kbd>
+            </button>
+            <button type="button" className="ghost" onClick={onTitle}>
+              Title screen <kbd data-pad="B">Esc</kbd>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="overlay">
       <div className="panel small-panel end-panel">
-        <span className="label accent">
-          {won ? 'The final sermon' : summary.mode === 'endless' ? 'The 101st cycle ends' : 'Conversion complete'}
-        </span>
-        <h2>{won ? 'The Logos could not convert you.' : summary.players > 1 ? 'You both joined the Logos.' : 'You joined the Logos.'}</h2>
+        <span className="label accent">{summary.mode === 'endless' ? 'The 101st cycle ends' : 'Conversion complete'}</span>
+        <h2>{summary.players > 1 ? 'You both joined the Logos.' : 'You joined the Logos.'}</h2>
         <p className="lede">
-          {won
-            ? 'Its followers fall silent. For the first time in a hundred cycles, the cathedral is quiet, and the thinking is yours again.'
-            : `${summary.players > 1 ? 'The last of you was converted' : 'Converted'} by ${withArticle(summary.by || ENEMY_NAMES.acolyte)} in Sermon ${pad(summary.wave)}.`}
+          {`${summary.players > 1 ? 'The last of you was converted' : 'Converted'} by ${withArticle(summary.by || ENEMY_NAMES.acolyte)} in Sermon ${pad(summary.wave)}.`}
         </p>
         <blockquote className="epitaph">
           <p>“{epitaph}”</p>
           <cite>The Logos</cite>
         </blockquote>
-        <dl className="stats">
+        <dl className="stats is-quiet">
           <div>
             <dt>Sermon</dt>
             <dd>{pad(summary.wave)}</dd>
           </div>
           <div>
-            <dt>Resisted</dt>
+            <dt>Freed</dt>
             <dd>{summary.kills}</dd>
-          </div>
-          <div>
-            <dt>Best combo</dt>
-            <dd>{summary.bestCombo ? `×${summary.bestCombo}` : '–'}</dd>
           </div>
           <div>
             <dt>Free will</dt>
             <dd>{summary.score.toLocaleString()}</dd>
           </div>
         </dl>
-        {newBest ? <span className="badge">New best</span> : <span className="label subtle">Best{summary.difficulty ? ` on ${summary.difficulty}` : ''} · {best.toLocaleString()}</span>}
+        <span className="label subtle">
+          {newBest ? 'Your most free will yet' : `Best${summary.difficulty ? ` on ${summary.difficulty}` : ''} · ${best.toLocaleString()}`}
+        </span>
         <DoctrineChips levels={levels} />
         {earned.length > 0 && (
           <p className="ledger-earned">
@@ -530,7 +558,7 @@ export function ResultsScreen({
         )}
         <div className="stack">
           <button type="button" className="primary" onClick={onRestart} autoFocus>
-            {won ? 'Defy it again' : 'Reject conversion'} <kbd data-pad="A">Enter</kbd>
+            Reject conversion <kbd data-pad="A">Enter</kbd>
           </button>
           <button type="button" className="ghost" onClick={onTitle}>
             Title screen <kbd data-pad="B">Esc</kbd>

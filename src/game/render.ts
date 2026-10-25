@@ -21,6 +21,7 @@ import {
   type Game,
   type Point,
   type Corpse,
+  type Witness,
   REVIVE_TIME,
   cursed,
 } from './engine'
@@ -178,6 +179,8 @@ export type Assets = {
     flash: Record<FollowerBody, Sprite[]>
     slowed: Record<FollowerBody, Sprite[]>
     rooted: Record<FollowerBody, Sprite[]>
+    /** Freed followers: the same frames, drained of the Logos's colours. */
+    freed: Record<ArenaId, Record<FollowerBody, Sprite[]>>
   }
   /** The Hallucinations' six-fingered hand: frames, plus the red and cyan fringe it glitches with. */
   hand: { base: Sprite[]; flash: Sprite[]; red: Sprite[]; cyan: Sprite[] }
@@ -855,6 +858,23 @@ function buildVignette(rgb: string, steps: number[]) {
   return element
 }
 
+/** A follower's frame with the colour drained out of it, cooled and dimmed: someone who has stopped believing. */
+function drained(image: CanvasImageSource & { width: number; height: number }) {
+  const { element, ctx } = canvas(image.width, image.height)
+  ctx.drawImage(image, 0, 0)
+  const data = ctx.getImageData(0, 0, image.width, image.height)
+  for (let offset = 0; offset < data.data.length; offset += 4) {
+    if (!data.data[offset + 3]) continue
+    const [r, g, b] = [data.data[offset], data.data[offset + 1], data.data[offset + 2]]
+    const grey = r * 0.299 + g * 0.587 + b * 0.114
+    data.data[offset] = Math.round((grey * 0.8 + r * 0.2) * 0.82)
+    data.data[offset + 1] = Math.round((grey * 0.8 + g * 0.2) * 0.86)
+    data.data[offset + 2] = Math.round(Math.min(255, (grey * 0.8 + b * 0.2) * 0.98 + 12))
+  }
+  ctx.putImageData(data, 0, 0)
+  return element
+}
+
 function buildFollowers(sheet: HTMLImageElement): Assets['enemy'] {
   const bodies = Object.keys(FOLLOWER_FRAMES) as FollowerBody[]
   const frames = (body: FollowerBody, arena: ArenaId) =>
@@ -873,6 +893,12 @@ function buildFollowers(sheet: HTMLImageElement): Assets['enemy'] {
     flash: silhouettes('#ffffff'),
     slowed: silhouettes('#ff2a40'),
     rooted: silhouettes('#a77bff'),
+    freed: Object.fromEntries(
+      FOLLOWER_ARENAS.map((arena) => [
+        arena,
+        Object.fromEntries(bodies.map((body) => [body, frames(body, arena).map((frame) => outlined(drained(frame), '#181425'))])),
+      ]),
+    ) as Assets['enemy']['freed'],
   }
 }
 
@@ -1084,6 +1110,18 @@ function drawCorpse(ctx: CanvasRenderingContext2D, corpse: Corpse, assets: Asset
     ctx.fillStyle = corpse.final ? '#ff6a72' : wisp ? '#9be8d6' : '#fff1c8'
     ctx.fillRect(snap(x - height * 0.32), snap(line), snap(height * 0.64), PX)
   }
+}
+
+/** A freed follower: drained of colour, walking to its place by the walls, then watching. */
+function drawWitness(ctx: CanvasRenderingContext2D, w: Witness, assets: Assets) {
+  const walking = w.onGround && Math.abs(w.vx) > 1
+  const frame = walking ? Math.floor((w.phase * 7 * 4) / TAU) % 4 : 0
+  const sprite = assets.enemy.freed[w.dress][w.body][frame]
+  const bob = walking ? Math.abs(Math.sin(w.phase * 7)) * 1.5 : 0
+  // See-through, so they sit back from the fight like the spectators they are.
+  ctx.globalAlpha = 0.6
+  drawCharacter(ctx, sprite, snap(w.x), snap(w.y - bob), w.scale, flipEnemy(w.facing))
+  ctx.globalAlpha = 1
 }
 
 const flipEnemy = (facing: number) => facing !== ENEMY_SOURCE_FACING
@@ -1556,6 +1594,8 @@ export function render(
   ctx.imageSmoothingEnabled = false
   ctx.drawImage(layers.ground.element, SCENE.left, SCENE.top, SCENE.right - SCENE.left, SCENE.bottom - SCENE.top)
 
+  // Witnesses stand behind the fight; they are not part of it.
+  for (const witness of g.witnesses) drawWitness(ctx, witness, assets)
   for (const enemy of g.enemies) drawEnemy(ctx, enemy, assets, g.arena.id, time)
   for (const corpse of g.corpses) drawCorpse(ctx, corpse, assets, g.arena.id)
 

@@ -24,7 +24,6 @@ export type HudState = {
   waveKills: number
   waveTotal: number
   waveState: WaveState
-  score: number
 }
 
 export function readHud(g: Game): HudState {
@@ -48,7 +47,6 @@ export function readHud(g: Game): HudState {
     waveKills: g.waveKills,
     waveTotal: g.waveTotal,
     waveState: g.waveState,
-    score: g.score,
   }
 }
 
@@ -120,7 +118,7 @@ function ComboOrb({ player }: { player: PlayerHud }) {
   // A combo of ×10, ×20 or ×30 powers you up; the orb glows and names the tier.
   const tier = comboTier(player.combo)
   return (
-    <div className={`orb tier-${tier}`} style={{ '--fill-top': `${fillTop}` } as CSSProperties} title="Combo: chain kills for more free will, and power at ×10, ×20 and ×30">
+    <div className={`orb tier-${tier}`} style={{ '--fill-top': `${fillTop}` } as CSSProperties} title="Combo: free followers in quick succession for more free will, and power at ×10, ×20 and ×30">
       <span className="orb-fill" />
       <span className="orb-frame" />
       {player.combo >= 2 && <b key={player.combo}>×{player.combo}</b>}
@@ -159,9 +157,6 @@ export function Hud({ hud, flashing, showPauseButton, onPause, onDash }: Props) 
         <div className="sermon-progress">
           <i style={{ transform: `scaleX(${waveFrac})` }} />
         </div>
-        <strong className="score" title="Free will">
-          {hud.score.toLocaleString()}
-        </strong>
       </div>
 
       {showPauseButton && (

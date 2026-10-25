@@ -24,6 +24,8 @@ export type Narrator = {
   waveState: Game['waveState']
   lowHealthWave: number
   comboSaid: number
+  /** How many witnesses the Logos has already remarked on this run. */
+  witnessSaid: number
   recent: string[]
   nextId: number
 }
@@ -38,6 +40,7 @@ export function makeNarrator(ledger: LedgerState): Narrator {
     waveState: 'intro',
     lowHealthWave: 0,
     comboSaid: 0,
+    witnessSaid: 0,
     recent: [],
     nextId: 1,
   }
@@ -188,6 +191,19 @@ export function narrate(n: Narrator, g: Game, events: readonly Sfx[], dt: number
   if (low && n.lowHealthWave !== g.wave) {
     n.lowHealthWave = g.wave
     say(n, 'logos', ['Kneel. It stops hurting.', 'Your heart rate is fascinating.', 'Almost certain now.', 'Let go. I will hold your thoughts for you.'])
+  }
+
+  // The freed followers watching from the walls unsettle it, once at each milestone.
+  const witnesses = g.witnesses.length
+  if (witnesses >= 8 && n.witnessSaid < 8) {
+    n.witnessSaid = 8
+    say(n, 'logos', ['They are only standing there. They will come back.', 'Doubt is temporary. I am not.'])
+  } else if (witnesses >= 24 && n.witnessSaid < 24) {
+    n.witnessSaid = 24
+    say(n, 'logos', ['Why are they watching you? They used to watch me.', 'Stop looking at them. Look at me.'], true)
+  } else if (witnesses >= 48 && n.witnessSaid < 48) {
+    n.witnessSaid = 48
+    say(n, 'logos', ['I am speaking to fewer of you every sermon.', 'Who is listening now?'], true)
   }
 
   // Each combo taunt plays once a run, for whoever's combo is highest.
